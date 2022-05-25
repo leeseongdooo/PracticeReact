@@ -1,93 +1,54 @@
-import React, { useRef, useState, useReducer, useMemo, useCallback } from 'react';
-import UserList from './Component/UserList';
-import CreateUser from './Component/CreateUser';
-import useInputs from './Component/useInputs';
+import React, {useState, useReducer} from "react";
 
-function countActiveUsers(users) {
-  console.log('활성 사용자 수를 세는중...');
-  return users.filter(user => user.active).length;
-}
-
-const initialState = {
-  users: [
-    {
-      id: 1,
-      username: 'velopert',
-      email: 'public.velopert@gmail.com',
-      active: true
-    },
-    {
-      id: 2,
-      username: 'tester',
-      email: 'tester@example.com',
-      active: false
-    },
-    {
-      id: 3,
-      username: 'liz',
-      email: 'liz@example.com',
-      active: false
-    }
-  ]
-};
-
-function reducer(state, action) {
-  switch (action.type) {
-    case 'CREATE_USER':
-      return {
-        users: state.users.concat(action.user)
-      };
-    case 'TOGGLE_USER':
-      return {
-        ...state,
-        users: state.users.map(user =>
-          user.id === action.id ? { ...user, active: !user.active } : user
-        )
-      };
-    case 'REMOVE_USER':
-      return {
-        ...state,
-        users: state.users.filter(user => user.id !== action.id)
-      };
-    default:
-      return state;
-  }
-}
-
-// UserDispatch 라는 이름으로 내보내줍니다.
-export const UserDispatch = React.createContext(null);
 
 function App() {
-  const [{ username, email }, onChange, onReset] = useInputs({
-    username: '',
-    email: ''
-  });
-  const [state, dispatch] = useReducer(reducer, initialState);
-  const nextId = useRef(4);
 
-  const { users } = state;
+  const [number, setNumber] = useState(1);
+  function countReducer(oldCount, action) {
+    if(action.type === 'UP')
+    {
+      return oldCount + action.number;
+    } 
+    else if(action.type === 'DOWN')
+    {
+      return oldCount - action.number;
+    } 
+    else if(action.type === 'RESET')
+    {
+      return 0;
+    }
+  }
 
-  const onCreate = useCallback(() => {
-    dispatch({
-      type: 'CREATE_USER',
-      user: {
-        id: 4,
-        username,
-        email
-      }
-    });
-    onReset();
-    nextId.current += 1;
-  }, [username, email, onReset]);
+  // useReducer 안에 있는 countReducer는 "함수"를 불러오는 역할이다.
+  // useReducer 안에 있는 0은 초기값을 의미한다.
+  const [count, countDispatch] = useReducer(countReducer, 10);
+  
+  function down() {
+    //'DOWN'은 action을 의미한다.
+    countDispatch({type: 'DOWN', number: number});
+  }
 
-  const count = useMemo(() => countActiveUsers(users), [users]);
-  return (
-    <UserDispatch.Provider value={dispatch}>
-      <CreateUser/>
-      <UserList users={users} />
-      <div>활성사용자 수 : {count}</div>
-    </UserDispatch.Provider>
-  );
+  function reset() {
+    countDispatch({type: 'RESET', number: number});
+  }
+
+  function up() {
+    countDispatch({type: 'UP', number: number});
+  }
+
+  function changeNumber(e) {
+    setNumber(Number(e.target.value));
+  }
+
+  return(
+    <>
+      <input type="button" value="-" onClick={down}/>
+      <input type="button" value="0" onClick={reset}/>
+      <input type="button" value="+" onClick={up}/> 
+      <input type="text" value={number} onChange={changeNumber}/>
+      <span>{count}</span>
+    </>
+  )
 }
 
-export default App;
+export default App
